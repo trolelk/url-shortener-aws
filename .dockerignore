@@ -1,0 +1,12 @@
+infra/
+bootstrap/
+lambda/
+*.tf
+*.tfstate*
+.terraform/
+.venv/
+__pycache__/
+*.pyc
+.git/
+.env
+README.md

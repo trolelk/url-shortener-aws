@@ -1,0 +1,5 @@
+fastapi~=0.136.0
+pydantic~=2.13.2
+uvicorn~=0.44.0
+boto3~=1.43.9
+
