@@ -29,7 +29,7 @@ module "dynamodb" {
 
 module "s3" {
   source = "./modules/s3"
-  s3_bucket_name = "url-shortener-uploads-"
+  s3_bucket_name = "url-shortener-uploads-trolczi"
 }
 
 module "sqs" {
