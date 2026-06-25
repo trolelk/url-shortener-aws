@@ -18,11 +18,11 @@ resource "aws_iam_role" "lambda_role" {
       {
         Action = "sts:AssumeRole"
         Effect = "Allow"
-        Sid = ""
+        Sid    = ""
         Principal = {
           Service = "lambda.amazonaws.com"
         }
-      }]
+    }]
   })
 }
 
@@ -58,28 +58,28 @@ resource "aws_iam_role_policy" "lambda_policy" {
 }
 
 resource "aws_lambda_function" "lambda_file_processor" {
-  function_name = "file-processor"
-  role          = aws_iam_role.lambda_role.arn
-  filename = data.archive_file.file_processor.output_path
-  handler = "handler.handler"
+  function_name    = "file-processor"
+  role             = aws_iam_role.lambda_role.arn
+  filename         = data.archive_file.file_processor.output_path
+  handler          = "handler.handler"
   source_code_hash = data.archive_file.file_processor.output_base64sha256
-  runtime = "python3.12"
+  runtime          = "python3.12"
 
   environment {
     variables = {
       DYNAMODB_TABLE = "files"
-      SQS_QUEUE_URL = var.sqs_queue_url
+      SQS_QUEUE_URL  = var.sqs_queue_url
     }
   }
 }
 
 resource "aws_lambda_function" "lambda_url_worker" {
-  function_name = "url-worker"
-  role          = aws_iam_role.lambda_role.arn
-  filename = data.archive_file.url_worker.output_path
-  handler = "handler.handler"
+  function_name    = "url-worker"
+  role             = aws_iam_role.lambda_role.arn
+  filename         = data.archive_file.url_worker.output_path
+  handler          = "handler.handler"
   source_code_hash = data.archive_file.url_worker.output_base64sha256
-  runtime = "python3.12"
+  runtime          = "python3.12"
 
   environment {
     variables = {

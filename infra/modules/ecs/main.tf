@@ -1,55 +1,55 @@
 resource "aws_security_group" "alb_sg_shortener" {
-  name = "sg alb inbound port 80"
+  name        = "sg alb inbound port 80"
   description = "Allow port 80 inbound connection for alb"
-  vpc_id = var.vpc_id
+  vpc_id      = var.vpc_id
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb_http_ingress" {
-  cidr_ipv4 = "0.0.0.0/0"
-  from_port = 80
-  to_port = 80
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 80
+  to_port           = 80
   ip_protocol       = "tcp"
   security_group_id = aws_security_group.alb_sg_shortener.id
 }
 
 resource "aws_vpc_security_group_egress_rule" "alb_all_egress" {
-  cidr_ipv4 = "0.0.0.0/0"
+  cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
   security_group_id = aws_security_group.alb_sg_shortener.id
 }
 
 resource "aws_security_group" "ecs_sg" {
-  name = "sg ecs"
+  name   = "sg ecs"
   vpc_id = var.vpc_id
 }
 
 resource "aws_vpc_security_group_ingress_rule" "ecs_app_ingress" {
   referenced_security_group_id = aws_security_group.alb_sg_shortener.id
-  security_group_id = aws_security_group.ecs_sg.id
-  ip_protocol = "tcp"
-  from_port = 8000
-  to_port   = 8000
+  security_group_id            = aws_security_group.ecs_sg.id
+  ip_protocol                  = "tcp"
+  from_port                    = 8000
+  to_port                      = 8000
 }
 
 resource "aws_vpc_security_group_egress_rule" "ecs_all_egress" {
-  cidr_ipv4 = "0.0.0.0/0"
+  cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
   security_group_id = aws_security_group.ecs_sg.id
 }
 
 resource "aws_lb" "alb_url_shortener" {
-  name = "url-shortener-alb"
-  internal = false
+  name               = "url-shortener-alb"
+  internal           = false
   load_balancer_type = "application"
-  security_groups = [aws_security_group.alb_sg_shortener.id]
-  subnets = var.public_subnet_ids
+  security_groups    = [aws_security_group.alb_sg_shortener.id]
+  subnets            = var.public_subnet_ids
 }
 
 resource "aws_lb_target_group" "alb_tg_shortener" {
-  name = "alb-tg-url-shortener"
-  port = 8000
-  protocol = "HTTP"
-  vpc_id = var.vpc_id
+  name        = "alb-tg-url-shortener"
+  port        = 8000
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
   target_type = "ip"
 
   health_check {
@@ -59,11 +59,11 @@ resource "aws_lb_target_group" "alb_tg_shortener" {
 
 resource "aws_lb_listener" "alb_listener_http" {
   load_balancer_arn = aws_lb.alb_url_shortener.arn
-  port = 80
-  protocol = "HTTP"
+  port              = 80
+  protocol          = "HTTP"
 
   default_action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = aws_lb_target_group.alb_tg_shortener.arn
   }
 }
@@ -98,11 +98,11 @@ resource "aws_iam_role" "ecs_task_role" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect    = "Allow"
+      Effect = "Allow"
       Principal = {
         Service = "ecs-tasks.amazonaws.com"
       }
-      Action    = "sts:AssumeRole"
+      Action = "sts:AssumeRole"
     }]
   })
 }
@@ -159,7 +159,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
       hostPort      = 8000
     }]
     environment = [
-      { name = "S3_BUCKET",      value = var.s3_bucket_name },
+      { name = "S3_BUCKET", value = var.s3_bucket_name },
       { name = "DYNAMODB_TABLE", value = "urls" }
     ]
     logConfiguration = {
@@ -174,19 +174,19 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
 }
 
 resource "aws_ecs_service" "ecs_service_shortener" {
-  name = "aws_ecs_services"
-  cluster = aws_ecs_cluster.ecs_cluster.id
+  name            = "aws_ecs_services"
+  cluster         = aws_ecs_cluster.ecs_cluster.id
   task_definition = aws_ecs_task_definition.ecs_task_definition.arn
-  desired_count = 1
-  launch_type = "FARGATE"
+  desired_count   = 1
+  launch_type     = "FARGATE"
   network_configuration {
-    subnets = var.public_subnet_ids
-    security_groups = [aws_security_group.ecs_sg.id]
+    subnets          = var.public_subnet_ids
+    security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = true
   }
   load_balancer {
     target_group_arn = aws_lb_target_group.alb_tg_shortener.arn
-    container_name = "url-shortener"
-    container_port = 8000
+    container_name   = "url-shortener"
+    container_port   = 8000
   }
 }

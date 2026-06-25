@@ -1,6 +1,6 @@
 resource "aws_dynamodb_table" "dynamo_db_table_urls" {
-  name = "urls"
-  hash_key = "code"
+  name         = "urls"
+  hash_key     = "code"
   billing_mode = "PAY_PER_REQUEST"
 
   attribute {
@@ -10,8 +10,8 @@ resource "aws_dynamodb_table" "dynamo_db_table_urls" {
 }
 
 resource "aws_dynamodb_table" "dynamo_db_table_files" {
-  name = "files"
-  hash_key = "file_key"
+  name         = "files"
+  hash_key     = "file_key"
   billing_mode = "PAY_PER_REQUEST"
 
   attribute {
