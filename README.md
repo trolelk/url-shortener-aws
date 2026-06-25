@@ -1,6 +1,6 @@
 # URL Shortener
 
-Skracarka URL-i z asynchronicznym pobieraniem metadanych docelowej strony (tytuł, opis). Zbudowana na AWS, infrastruktura zarządzana w całości przez Terraform. CI/CD przez GitHub Actions - w trakcie wprowadzania.
+Skracarka URL-i z asynchronicznym pobieraniem metadanych docelowej strony (tytuł, opis). Zbudowana na AWS, infrastruktura zarządzana w całości przez Terraform. CI/CD przez GitHub Actions z uwierzytelnianiem przez OIDC.
 
 ---
 
@@ -73,7 +73,7 @@ Skrócenie URL-a poza zapisem do DynamoDB wrzuca też plik JSON do S3, co urucha
 | Wejście / routing| API Gateway (HTTP API), Application Load Balancer  |
 | Sieć             | VPC, public + private subnety, IGW, NAT Gateway    |
 | IaC              | Terraform                                          |
-| CI/CD            | GitHub Actions + OIDC (w trakcie wprowadzania)     |
+| CI/CD            | GitHub Actions + OIDC      |
 
 ---
 
@@ -127,6 +127,16 @@ Lambdy są pakowane do archiwów ZIP przez Terraform (`archive_file`) i wdrażan
 
 ---
 
+## CI/CD
+
+Pipeline (`.github/workflows/deploy.yml`) uwierzytelnia się w AWS przez OIDC - bez statycznych kluczy w sekretach. GitHub wystawia krótkożyjący token, a zaufanie po stronie AWS jest ograniczone do konkretnego repozytorium.
+
+**Pull request - > `main`:** testy, `terraform fmt -check`, `validate`, `plan`. Podgląd zmian bez wdrażania.
+
+**Push - > `main`:** po przejściu testów i bramek jakości wykonywany jest `terraform apply`, build i push obrazu do ECR, a następnie wymuszony redeploy serwisu ECS.
+
+---
+
 ## Uruchomienie
 
 Wymagania: konto AWS, AWS CLI, Terraform, Docker.
@@ -168,12 +178,11 @@ Po wdrożeniu adres aplikacji znajduje się w outputach Terraform (`api_gateway_
 
 ## Plany na przyszłość
 
-### Bezpieczeństwo i obserwowalność (bardzo ważne !!)
+### Bezpieczeństwo i obserwowalność (bardzo ważne)
 - Zabezpieczenie przed SSRF w Lambdzie pobierającej metadane - blokada adresów wewnętrznych (m.in. endpointu metadata AWS) przed pobraniem dowolnego URL-a podanego przez użytkownika
 - Monitoring i obserwowalność: CloudWatch (dashboard, alarmy na błędy Lambd i wykorzystanie ECS), docelowo distributed tracing przez X-Ray przez cały łańcuch zdarzeń
 
 ### Pozostałe
-- Dokończenie CI/CD w GitHub Actions z uwierzytelnianiem przez OIDC (bez statycznych kluczy) 
 - Dead Letter Queue dla SQS - wiadomości, których Lambda nie przetworzy po kilku próbach, trafiają do osobnej kolejki zamiast krążyć w nieskończoność
 - Rozdział środowisk dev/prod (osobne workspace'y / katalogi Terraform z odseparowanym state)
 - Zawężenie uprawnień roli CI z `AdministratorAccess` do least-privilege
