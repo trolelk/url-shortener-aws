@@ -4,9 +4,9 @@ resource "aws_apigatewayv2_api" "http_gateway" {
 }
 
 resource "aws_apigatewayv2_integration" "http_gateway_integration" {
-  api_id           = aws_apigatewayv2_api.http_gateway.id
-  integration_type = "HTTP_PROXY"
-  integration_uri = "http://${var.alb_dns_name}/{proxy}"
+  api_id             = aws_apigatewayv2_api.http_gateway.id
+  integration_type   = "HTTP_PROXY"
+  integration_uri    = "http://${var.alb_dns_name}/{proxy}"
   integration_method = "ANY"
 }
 
@@ -18,7 +18,7 @@ resource "aws_apigatewayv2_route" "http_gateway_route" {
 }
 
 resource "aws_apigatewayv2_stage" "http_gateway_stage" {
-  api_id = aws_apigatewayv2_api.http_gateway.id
-  name   = "$default"
+  api_id      = aws_apigatewayv2_api.http_gateway.id
+  name        = "$default"
   auto_deploy = true
 }
